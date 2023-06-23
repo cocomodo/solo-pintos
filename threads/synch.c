@@ -56,7 +56,8 @@ sema_init (struct semaphore *sema, unsigned value) {
    interrupt handler.  This function may be called with
    interrupts disabled, but if it sleeps then the next scheduled
    thread will probably turn interrupts back on. This is
-   sema_down function. */
+   sema_down function. 
+   세마포어를 요청하고, 세마포어를 획득한 경우 세마포어의 값을 1 감소시키는 함수*/
 void
 sema_down (struct semaphore *sema) {
 	enum intr_level old_level;
