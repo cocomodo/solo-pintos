@@ -331,7 +331,7 @@ thread_sleep(int64_t ticks){
 }
 
 void
-thread_wakeup(int64_t global_ticks){
+thread_wakeup(int64_t current_ticks){
 
 
 	enum intr_level old_level;
@@ -342,7 +342,7 @@ thread_wakeup(int64_t global_ticks){
 	while(curr_elem != list_end(&sleep_list)){ //list의 끝까지 반복
 		//현재 감시중인 요소(curr_elem)에 연결된 스레드
 		struct thread *curr_thread=list_entry(curr_elem,struct thread, elem);//현재 검사중인 elem의 쓰레드
-		if(global_ticks >= curr_thread->wakeup_ticks){//깰 시간이 됐으면
+		if(current_ticks >= curr_thread->wakeup_ticks){//깰 시간이 됐으면
 			curr_elem=list_remove(curr_elem); //sleep_list에서 제거 & curr_elem에는 다음 elem이 담김
 			thread_unblock(curr_thread); //ready_list로 이동
 			preempt_priority();
@@ -364,7 +364,7 @@ bool cmp_thread_ticks(const struct list_elem *a, const struct list_elem *b, void
 void
 thread_set_priority (int new_priority) {
 	thread_current ()->init_priority = new_priority;
-	update_priority_before_donations();
+	update_priority_for_donations();
 	preempt_priority();
 }
 

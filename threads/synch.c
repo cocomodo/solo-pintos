@@ -112,7 +112,8 @@ sema_up (struct semaphore *sema) {
 
 	old_level = intr_disable ();
 	if (!list_empty (&sema->waiters)){
-		list_sort(&sema->waiters, cmp_thread_priority, NULL); // **필요한지 고민 해볼것**
+		// waiters에 들어있는 스레드가 donate를 받아 우선순위가 달라졌을 수 있기 때문에 재정렬
+		list_sort(&sema->waiters, cmp_thread_priority, NULL);
 		thread_unblock (list_entry (list_pop_front (&sema->waiters),
 					struct thread, elem));
 
@@ -120,7 +121,7 @@ sema_up (struct semaphore *sema) {
 
 	sema->value++;
 	intr_set_level (old_level);
-	preempt_priority();
+	preempt_priority(); // unblock이 호출되며 ready_list가 수정되었으므로 선점 여부 확인
 }
 
 static void sema_test_helper (void *sema_);
@@ -238,7 +239,7 @@ lock_release (struct lock *lock) {
 	ASSERT (lock_held_by_current_thread (lock));
 
 	remove_donor(lock);
-	update_priority_before_donations();
+	update_priority_for_donations();
 
 	lock->holder = NULL;
 	sema_up (&lock->semaphore);
@@ -411,7 +412,7 @@ void remove_donor(struct lock *lock){
 }
 
 //락을 release하고 나서 priority를 상속 받기 이전 상태로 돌리는 함수
-void update_priority_before_donations(void){
+void update_priority_for_donations(void){
 	struct thread *curr=thread_current();
 	struct list *donations=&(thread_current()->donations);
 	struct thread *donations_root;
